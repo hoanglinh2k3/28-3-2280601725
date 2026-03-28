@@ -1,36 +1,65 @@
-var express = require("express");
-var router = express.Router();
-let upload = require('../utils/uploadHandler')
+const express = require('express');
+const router = express.Router();
+const upload = require('../utils/uploadHandler');
 
-//client ->upload->save
+router.post('/one_file', function (req, res) {
+  upload.single('file')(req, res, function (err) {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        message: err.message
+      });
+    }
 
-router.post('/one_file', upload.single('file'), function (req, res, next) {
     if (!req.file) {
-        res.status(404).send({
-            message: "file khong duoc de trong"
-        })
-    } else {
-        res.send({
-            filename: req.file.filename,
-            path: req.file.path,
-            size: req.file.size
-        })
+      return res.status(400).json({
+        success: false,
+        message: 'file khong duoc de trong'
+      });
     }
-})
-router.post('/multiple_files', upload.array('files'), function (req, res, next) {
-    if (!req.files) {
-        res.status(404).send({
-            message: "file khong duoc de trong"
-        })
-    } else {
-        res.send(req.files.map(f => {
-            return {
-                filename: f.filename,
-                path: f.path,
-                size: f.size
-            }
-        }))
+
+    return res.status(200).json({
+      success: true,
+      message: 'Upload 1 file thanh cong',
+      data: {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        path: req.file.path,
+        size: req.file.size
+      }
+    });
+  });
+});
+
+router.post('/multiple_files', function (req, res) {
+  upload.array('files', 10)(req, res, function (err) {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        message: err.message
+      });
     }
-})
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'file khong duoc de trong'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Upload nhieu file thanh cong',
+      data: req.files.map((f) => ({
+        filename: f.filename,
+        originalname: f.originalname,
+        mimetype: f.mimetype,
+        path: f.path,
+        size: f.size
+      }))
+    });
+  });
+});
 
 module.exports = router;

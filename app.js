@@ -1,59 +1,65 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-let mongoose = require('mongoose')
+require('dotenv').config();
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const mongoose = require('mongoose');
 
-var app = express();
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const usersImportRouter = require('./routes/usersImport');
+const rolesRouter = require('./routes/roles');
+const productsRouter = require('./routes/products');
+const categoriesRouter = require('./routes/categories');
+const authRouter = require('./routes/auth');
+const cartRouter = require('./routes/cart');
+const uploadRouter = require('./routes/upload');
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
+const app = express();
+
+// Kết nối MongoDB
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/NNPTUD-C4')
+  .then(() => {
+    console.log('MongoDB connected successfully');
+  })
+  .catch((err) => {
+    console.error('MongoDB connection failed:', err.message);
+  });
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
+// static folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// routes
 app.use('/', indexRouter);
-//localhost:3000/users
-app.use('/api/v1/users', require('./routes/users'));
-app.use('/api/v1/roles', require('./routes/roles'));
-app.use('/api/v1/products', require('./routes/products'))
-app.use('/api/v1/categories', require('./routes/categories'))
-app.use('/api/v1/auth', require('./routes/auth'))
-app.use('/api/v1/carts', require('./routes/cart'))
-app.use('/api/v1/upload', require('./routes/upload'))
+app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/users', usersImportRouter);
+app.use('/api/v1/roles', rolesRouter);
+app.use('/api/v1/products', productsRouter);
+app.use('/api/v1/categories', categoriesRouter);
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/cart', cartRouter);
+app.use('/api/v1/upload', uploadRouter);
 
-mongoose.connect('mongodb://localhost:27017/NNPTUD-C4');
-mongoose.connection.on('connected', function () {
-  console.log("connected");
-})
-mongoose.connection.on('disconnected', function () {
-  console.log("disconnected");
-})
-mongoose.connection.on('disconnecting', function () {
-  console.log("disconnecting");
-})
-// catch 404 and forward to error handler
+// catch 404
 app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// error handler
+// error handler trả JSON
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  console.error('ERROR:', err);
 
-  // render the error page
-  res.status(err.status || 500);
-  res.send(err.message);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error'
+  });
 });
 
 module.exports = app;
