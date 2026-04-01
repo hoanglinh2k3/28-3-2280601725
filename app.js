@@ -16,6 +16,7 @@ const categoriesRouter = require('./routes/categories');
 const authRouter = require('./routes/auth');
 const cartRouter = require('./routes/cart');
 const uploadRouter = require('./routes/upload');
+const messagesRouter = require('./routes/messages'); // thêm dòng này
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/v1/categories', categoriesRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/cart', cartRouter);
 app.use('/api/v1/upload', uploadRouter);
+app.use('/api/v1/messages', messagesRouter); // thêm dòng này
 
 // catch 404
 app.use(function (req, res, next) {
